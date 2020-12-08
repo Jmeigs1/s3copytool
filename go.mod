@@ -1,4 +1,4 @@
-module github.com/jmeigs1/awscopytool
+module github.com/jmeigs1/s3copytool
 
 go 1.15
 

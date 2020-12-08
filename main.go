@@ -44,7 +44,7 @@ func main() {
 		}
 	}()
 
-	myFigure := figure.NewFigure("Aws Copy Tool", "", true)
+	myFigure := figure.NewFigure("S3 Copy Tool", "", true)
 	myFigure.Print()
 
 	fmt.Println("")
