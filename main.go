@@ -101,6 +101,7 @@ func setBucketState(state *state) error {
 			return strings.Contains(buckets[index], input)
 		},
 		StartInSearchMode: true,
+		Stdout:            &bellSkipper{},
 	}
 
 	_, state.bucket, err = prompt.Run()
@@ -135,6 +136,7 @@ func setObjectState(state *state) error {
 			Active:   fmt.Sprintf("%s {{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}", promptui.IconSelect),
 			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://%s/" | faint }}{{.Name | faint}}`, promptui.IconGood, state.bucket),
 		},
+		Stdout: &bellSkipper{},
 	}
 
 	selectedIndex, _, err := prompt.Run()
