@@ -1,4 +1,4 @@
-module awscopytool
+module github.com/jmeigs1/awscopytool
 
 go 1.15
 
