@@ -170,6 +170,7 @@ func setAction(state *state) (int, error) {
 			return strings.Contains(actionList[index].name, input)
 		},
 		StartInSearchMode: true,
+		Stdout:            &bellSkipper{},
 	}
 
 	i, _, err := prompt.Run()
