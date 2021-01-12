@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/atotto/clipboard"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -26,6 +27,10 @@ var actionList []action = []action{
 	{
 		name:     "print",
 		function: print,
+	},
+	{
+		name:     "pbcopy",
+		function: pbcopy,
 	},
 }
 
@@ -64,7 +69,16 @@ func print(state *state) error {
 
 	fmt.Printf("s3://%s/%s\n", state.bucket, state.key)
 
-	back(state)
+	os.Exit(0)
+	return nil
+}
+
+func pbcopy(state *state) error {
+
+	path := fmt.Sprintf("s3://%s/%s", state.bucket, state.key)
+
+	clipboard.WriteAll(path)
+	os.Exit(0)
 	return nil
 }
 
