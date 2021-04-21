@@ -21,15 +21,15 @@ var actionList []action = []action{
 		function: back,
 	},
 	{
-		name:     "copy",
+		name:     "copy file",
 		function: copy,
 	},
 	{
-		name:     "print",
+		name:     "print path",
 		function: print,
 	},
 	{
-		name:     "pbcopy",
+		name:     "path to clipboard",
 		function: pbcopy,
 	},
 }
