@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
+	"syscall"
 
 	"github.com/atotto/clipboard"
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,22 +47,57 @@ func back(state *state) error {
 }
 
 func copy(state *state) error {
+
 	// Create a file to write the S3 Object contents to.
 	filename := path.Base(state.key)
-	f, err := os.Create(filename)
+
+	size, err := getFileSize(state.s3Service, state.bucket, state.key)
 	if err != nil {
-		return fmt.Errorf("failed to create file %q, %v", filename, err)
+		panic(err)
+	}
+	fmt.Println("Starting download, size:", byteCountDecimal(size))
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
 	}
 
-	// Write the contents of S3 Object to the file
-	n, err := state.downloadService.Download(f, &s3.GetObjectInput{
+	temp, err := ioutil.TempFile(cwd, "getObjWithProgress-tmp-")
+	if err != nil {
+		panic(err)
+	}
+	tempfileName := temp.Name()
+
+	// Handle sigint and cleanup temp files
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		os.Remove(tempfileName)
+		os.Exit(0)
+	}()
+
+	writer := &progressWriter{writer: temp, size: size, written: 0}
+
+	_, err = state.downloadService.Download(writer, &s3.GetObjectInput{
 		Bucket: aws.String(state.bucket),
 		Key:    aws.String(state.key),
 	})
 	if err != nil {
+		fmt.Printf("Download failed! Deleting tempfile: %s", tempfileName)
+		os.Remove(tempfileName)
 		return fmt.Errorf("failed to download file, %v", err)
 	}
-	fmt.Printf("file downloaded, %d bytes\n", n)
+
+	if err := temp.Close(); err != nil {
+		panic(err)
+	}
+
+	if err := os.Rename(temp.Name(), filename); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("File downloaded! Available at:", filename)
 
 	back(state)
 	return nil

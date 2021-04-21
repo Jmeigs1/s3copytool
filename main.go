@@ -35,8 +35,9 @@ func main() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			castErr, ok := err.(error)
-			if ok && castErr.Error() == "^C" {
+			castErr, isErr := err.(error)
+			if isErr && castErr.Error() == "^C" {
+				fmt.Println("Exiting")
 
 			} else {
 				fmt.Println("General error: ", err)
@@ -56,9 +57,13 @@ func main() {
 		action:   -1,
 	}
 
-	state.session = session.New(&aws.Config{
+	var err error
+	state.session, err = session.NewSession(&aws.Config{
 		Region: aws.String(awsRegion),
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	state.s3Service = s3.New(state.session)
 
@@ -132,7 +137,7 @@ func setObjectState(state *state) error {
 		},
 		StartInSearchMode: true,
 		Templates: &promptui.SelectTemplates{
-			Inactive: fmt.Sprintf("{{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}"),
+			Inactive: "{{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}",
 			Active:   fmt.Sprintf("%s {{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}", promptui.IconSelect),
 			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://%s/" | faint }}{{.Name | faint}}`, promptui.IconGood, state.bucket),
 		},
