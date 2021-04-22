@@ -97,6 +97,8 @@ func copy(state *state) error {
 		panic(err)
 	}
 
+	os.Chmod(filename, 0644)
+
 	fmt.Println("File downloaded! Available at:", filename)
 
 	back(state)
