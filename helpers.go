@@ -18,13 +18,16 @@ func joinPrefixes(prefixes []string) string {
 	return strings.Join(prefixes, "/") + "/"
 }
 
-func getFileSize(svc *s3.S3, bucket string, prefix string) (filesize int64, error error) {
+func getFileSize(bucketName string, prefix string) (filesize int64, error error) {
+
+	s3Service, err := createS3ServiceForBucket(bucketName)
+
 	params := &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(bucketName),
 		Key:    aws.String(prefix),
 	}
 
-	resp, err := svc.HeadObject(params)
+	resp, err := s3Service.HeadObject(params)
 	if err != nil {
 		return 0, err
 	}

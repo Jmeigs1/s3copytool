@@ -51,7 +51,7 @@ func copy(state *state) error {
 	// Create a file to write the S3 Object contents to.
 	filename := path.Base(state.key)
 
-	size, err := getFileSize(state.s3Service, state.bucket, state.key)
+	size, err := getFileSize(state.bucket, state.key)
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,12 @@ func copy(state *state) error {
 
 	writer := &progressWriter{writer: temp, size: size, written: 0}
 
-	_, err = state.downloadService.Download(writer, &s3.GetObjectInput{
+	downloader, err := createDownloadServiceForBucket(state.bucket)
+	if err != nil {
+		return err
+	}
+
+	_, err = downloader.Download(writer, &s3.GetObjectInput{
 		Bucket: aws.String(state.bucket),
 		Key:    aws.String(state.key),
 	})

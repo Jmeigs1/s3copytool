@@ -5,15 +5,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/manifoldco/promptui"
 )
-
-var awsRegion string = "us-east-1"
 
 type ListObj struct {
 	Name   string
@@ -22,13 +16,10 @@ type ListObj struct {
 }
 
 type state struct {
-	session         *session.Session
-	s3Service       *s3.S3
-	downloadService *s3manager.Downloader
-	bucket          string
-	prefixes        []string
-	key             string
-	action          int
+	bucket   string
+	prefixes []string
+	key      string
+	action   int
 }
 
 func main() {
@@ -57,18 +48,6 @@ func main() {
 		action:   -1,
 	}
 
-	var err error
-	state.session, err = session.NewSession(&aws.Config{
-		Region: aws.String(awsRegion),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	state.s3Service = s3.New(state.session)
-
-	state.downloadService = s3manager.NewDownloader(state.session)
-
 	for {
 		if state.bucket == "" {
 			err := setBucketState(&state)
@@ -94,7 +73,7 @@ func main() {
 
 func setBucketState(state *state) error {
 
-	buckets, err := getBucketsListAWS(state.s3Service)
+	buckets, err := getBucketsListAWS()
 	if err != nil {
 		return err
 	}
@@ -120,7 +99,7 @@ func setBucketState(state *state) error {
 
 func setObjectState(state *state) error {
 
-	objects, err := getObjectsListAWS(state.s3Service, state.bucket, joinPrefixes(state.prefixes))
+	objects, err := getObjectsListAWS(state.bucket, joinPrefixes(state.prefixes))
 	if err != nil {
 		return err
 	}
