@@ -7,17 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-var DEFAULT_REGION string = "us-east-1"
-
 func getBucketsListAWS() ([]string, error) {
 
-	var err error
-	AwsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(DEFAULT_REGION),
-	})
-	if err != nil {
-		return nil, err
-	}
+	AwsSession := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 
 	s3Service := s3.New(AwsSession)
 
@@ -39,7 +33,7 @@ func getBucketsListAWS() ([]string, error) {
 
 func getObjectsListAWS(bucketName string, prefix string) ([]ListObj, error) {
 
-	s3Service, err := createS3ServiceForBucket(bucketName)
+	s3Service, err := createS3ServiceForBucket(&bucketName)
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +78,9 @@ func getObjectsListAWS(bucketName string, prefix string) ([]ListObj, error) {
 	return resultObjects, nil
 }
 
-func createS3Service(region string) (*s3.S3, error) {
+func createS3Service(region *string) (*s3.S3, error) {
 	AwsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
+		Region: region,
 	})
 	if err != nil {
 		return nil, err
@@ -97,58 +91,23 @@ func createS3Service(region string) (*s3.S3, error) {
 	return s3Service, nil
 }
 
-func createS3ServiceForBucket(bucketName string) (*s3.S3, error) {
-	s3Service, err := createS3Service(DEFAULT_REGION)
+func createS3ServiceForBucket(bucketName *string) (*s3.S3, error) {
+	region, err := findBucketRegion(bucketName)
 	if err != nil {
 		return nil, err
 	}
 
-	bucketRegion, err := s3Service.GetBucketLocation(&s3.GetBucketLocationInput{
-		Bucket: aws.String(bucketName),
-	})
+	s3Service, err := createS3Service(region)
 	if err != nil {
 		return nil, err
-	}
-
-	if *bucketRegion.LocationConstraint != DEFAULT_REGION {
-		s3Service, err = createS3Service(*bucketRegion.LocationConstraint)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return s3Service, nil
 }
 
-func createDownloadService(region string) (*s3manager.Downloader, error) {
+func createDownloadService(region *string) (*s3manager.Downloader, error) {
 	AwsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	s3Service := s3manager.NewDownloader(AwsSession)
-
-	return s3Service, nil
-}
-
-func createDownloadServiceForBucket(bucketName string) (*s3manager.Downloader, error) {
-
-	s3Service, err := createS3Service(DEFAULT_REGION)
-	if err != nil {
-		return nil, err
-	}
-
-	bucketRegion, err := s3Service.GetBucketLocation(&s3.GetBucketLocationInput{
-		Bucket: aws.String(bucketName),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	AwsSession, err := session.NewSession(&aws.Config{
-		Region: bucketRegion.LocationConstraint,
+		Region: region,
 	})
 	if err != nil {
 		return nil, err
@@ -157,4 +116,45 @@ func createDownloadServiceForBucket(bucketName string) (*s3manager.Downloader, e
 	s3Downloader := s3manager.NewDownloader(AwsSession)
 
 	return s3Downloader, nil
+}
+
+func createDownloadServiceForBucket(bucketName *string) (*s3manager.Downloader, error) {
+
+	region, err := findBucketRegion(bucketName)
+	if err != nil {
+		return nil, err
+	}
+
+	s3Downloader, err := createDownloadService(region)
+	if err != nil {
+		return nil, err
+	}
+
+	return s3Downloader, nil
+}
+
+func findBucketRegion(bucketName *string) (*string, error) {
+	AwsSession, err := session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s3Service := s3.New(AwsSession)
+
+	bucketRegion, err := s3Service.GetBucketLocation(&s3.GetBucketLocationInput{
+		Bucket: bucketName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// This is null for us-east-1.  Maybe a better way out there
+	region := bucketRegion.LocationConstraint
+	if region == nil {
+		region = aws.String("us-east-1")
+	}
+
+	return region, nil
 }

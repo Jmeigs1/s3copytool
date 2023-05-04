@@ -79,7 +79,7 @@ func copy(state *state) error {
 
 	writer := &progressWriter{writer: temp, size: size, written: 0}
 
-	downloader, err := createDownloadServiceForBucket(state.bucket)
+	downloader, err := createDownloadServiceForBucket(&state.bucket)
 	if err != nil {
 		return err
 	}

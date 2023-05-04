@@ -20,7 +20,10 @@ func joinPrefixes(prefixes []string) string {
 
 func getFileSize(bucketName string, prefix string) (filesize int64, error error) {
 
-	s3Service, err := createS3ServiceForBucket(bucketName)
+	s3Service, err := createS3ServiceForBucket(&bucketName)
+	if err != nil {
+		return 0, err
+	}
 
 	params := &s3.HeadObjectInput{
 		Bucket: aws.String(bucketName),
