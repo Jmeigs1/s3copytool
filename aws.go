@@ -1,17 +1,23 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 func getBucketsListAWS() ([]string, error) {
-
-	AwsSession := session.Must(session.NewSessionWithOptions(session.Options{
+	AwsSession, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-	}))
+	})
+	if err != nil {
+		err = handAwsError(err)
+		return nil, err
+	}
 
 	s3Service := s3.New(AwsSession)
 
@@ -19,6 +25,7 @@ func getBucketsListAWS() ([]string, error) {
 
 	result, err := s3Service.ListBuckets(input)
 	if err != nil {
+		err = handAwsError(err)
 		return nil, err
 	}
 
@@ -46,6 +53,7 @@ func getObjectsListAWS(bucketName string, prefix string) ([]ListObj, error) {
 
 	result, err := s3Service.ListObjectsV2(input)
 	if err != nil {
+		err = handAwsError(err)
 		return nil, err
 	}
 
@@ -147,6 +155,7 @@ func findBucketRegion(bucketName *string) (*string, error) {
 		Bucket: bucketName,
 	})
 	if err != nil {
+		err = handAwsError(err)
 		return nil, err
 	}
 
@@ -157,4 +166,16 @@ func findBucketRegion(bucketName *string) (*string, error) {
 	}
 
 	return region, nil
+}
+
+func handAwsError(err error) error {
+	if err != nil {
+		if awserr, ok := err.(awserr.Error); ok {
+			if awserr == aws.ErrMissingRegion {
+				newError := fmt.Errorf("no region configuration found. set AWS_REGION or configure aws cli")
+				return newError
+			}
+		}
+	}
+	return err
 }

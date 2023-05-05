@@ -29,9 +29,8 @@ func main() {
 			castErr, isErr := err.(error)
 			if isErr && castErr.Error() == "^C" {
 				fmt.Println("Exiting")
-
 			} else {
-				fmt.Println("General error: ", err)
+				fmt.Println("Error:", err)
 			}
 		}
 	}()
