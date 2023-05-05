@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-const FileNameExample = "go-example.txt"
-
 // Helper functions
 func joinPrefixes(prefixes []string) string {
 	if len(prefixes) == 0 {
