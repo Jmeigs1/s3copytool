@@ -18,7 +18,7 @@ func joinPrefixes(prefixes []string) string {
 	return strings.Join(prefixes, "/") + "/"
 }
 
-func getFileSize(bucketName string, prefix string) (filesize int64, error error) {
+func getFileSize(bucketName string, prefix string) (int64, error) {
 
 	s3Service, err := createS3ServiceForBucket(&bucketName)
 	if err != nil {
