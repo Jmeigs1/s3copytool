@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,4 +48,26 @@ func byteCountDecimal(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp])
+}
+
+type ParsedS3Url struct {
+	Bucket   string
+	Prefixes []string
+	Key      string
+}
+
+func ParseS3Url(s3Url string) (*ParsedS3Url, error) {
+	parsed, err := url.Parse(s3Url)
+	if err != nil {
+		return nil, err
+	}
+
+	// assume "directory" paths will end in /
+	splitPath := strings.Split(parsed.Path[1:], "/")
+
+	return &ParsedS3Url{
+		Bucket:   parsed.Host,
+		Prefixes: splitPath[:len(splitPath)-1],
+		Key:      splitPath[len(splitPath)-1],
+	}, nil
 }

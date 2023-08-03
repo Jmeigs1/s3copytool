@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -15,7 +16,7 @@ type ListObj struct {
 	IsBack bool
 }
 
-type state struct {
+type appState struct {
 	bucket   string
 	prefixes []string
 	key      string
@@ -40,11 +41,26 @@ func main() {
 
 	fmt.Println("")
 
-	state := state{
+	state := appState{
 		bucket:   "",
 		prefixes: []string{},
 		key:      "",
 		action:   -1,
+	}
+
+	if len(os.Args) >= 2 {
+
+		p, err := ParseS3Url(os.Args[1])
+		if err != nil {
+			fmt.Printf("Warning: Unable to parse starting key %s\n", os.Args[1])
+		}
+
+		state = appState{
+			bucket:   p.Bucket,
+			prefixes: p.Prefixes,
+			key:      p.Key,
+			action:   -1,
+		}
 	}
 
 	for {
@@ -70,7 +86,7 @@ func main() {
 
 // State functions
 
-func setBucketState(state *state) error {
+func setBucketState(state *appState) error {
 
 	buckets, err := getBucketsListAWS()
 	if err != nil {
@@ -96,7 +112,7 @@ func setBucketState(state *state) error {
 	return nil
 }
 
-func setObjectState(state *state) error {
+func setObjectState(state *appState) error {
 
 	objects, err := getObjectsListAWS(state.bucket, joinPrefixes(state.prefixes))
 	if err != nil {
@@ -144,7 +160,7 @@ func setObjectState(state *state) error {
 	return nil
 }
 
-func setAction(state *state) (int, error) {
+func setAction(state *appState) (int, error) {
 
 	prompt := promptui.Select{
 		Label: "Select Action",

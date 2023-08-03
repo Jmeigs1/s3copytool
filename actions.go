@@ -15,7 +15,7 @@ import (
 
 type action struct {
 	name     string
-	function func(state *state) error
+	function func(state *appState) error
 }
 
 var actionList []action = []action{
@@ -41,12 +41,12 @@ func (a action) String() string {
 	return a.name
 }
 
-func back(state *state) error {
+func back(state *appState) error {
 	state.key = ""
 	return nil
 }
 
-func copy(state *state) error {
+func copy(state *appState) error {
 
 	// Create a file to write the S3 Object contents to.
 	filename := path.Base(state.key)
@@ -110,7 +110,7 @@ func copy(state *state) error {
 	return nil
 }
 
-func print(state *state) error {
+func print(state *appState) error {
 
 	fmt.Printf("s3://%s/%s\n", state.bucket, state.key)
 
@@ -118,7 +118,7 @@ func print(state *state) error {
 	return nil
 }
 
-func pbcopy(state *state) error {
+func pbcopy(state *appState) error {
 
 	path := fmt.Sprintf("s3://%s/%s", state.bucket, state.key)
 
@@ -127,7 +127,7 @@ func pbcopy(state *state) error {
 	return nil
 }
 
-func doAction(state *state, action int) error {
+func doAction(state *appState, action int) error {
 
 	err := actionList[action].function(state)
 	if err != nil {
