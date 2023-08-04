@@ -99,6 +99,10 @@ func setBucketState(state *appState) error {
 		Searcher: func(input string, index int) bool {
 			return strings.Contains(buckets[index], input)
 		},
+		Templates: &promptui.SelectTemplates{
+			Active:   fmt.Sprintf("%s  {{ . | underline }}", promptui.IconSelect),
+			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://" | faint }}{{. | faint}}`, promptui.IconGood),
+		},
 		StartInSearchMode: true,
 		Stdout:            &bellSkipper{},
 	}
@@ -131,8 +135,8 @@ func setObjectState(state *appState) error {
 		},
 		StartInSearchMode: true,
 		Templates: &promptui.SelectTemplates{
-			Inactive: "{{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}",
-			Active:   fmt.Sprintf("%s {{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}", promptui.IconSelect),
+			Inactive: " {{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}",
+			Active:   fmt.Sprintf("%s  {{if .IsDir -}} {{ .Name | bold | underline }} {{- else -}} {{ .Name | underline }} {{- end}}", promptui.IconSelect),
 			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://%s/" | faint }}{{.Name | faint}}`, promptui.IconGood, state.bucket),
 		},
 		Stdout: &bellSkipper{},
@@ -167,6 +171,9 @@ func setAction(state *appState) (int, error) {
 		Items: actionList,
 		Searcher: func(input string, index int) bool {
 			return strings.Contains(actionList[index].name, input)
+		},
+		Templates: &promptui.SelectTemplates{
+			Active: fmt.Sprintf("%s  {{ . | underline }}", promptui.IconSelect),
 		},
 		StartInSearchMode: true,
 		Stdout:            &bellSkipper{},
