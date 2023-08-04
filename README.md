@@ -2,10 +2,8 @@
 
 A simple golang cli tool to easily browse and download S3 Objects.
 
-## Build
+`s3copytool` invokes AWS API call via aws-sdk-go
 
-```go build```
+All of the same environment variables and settings that power the AWS CLI are required/used for this application
 
-## Install
-
-```go install```
+For more info see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
