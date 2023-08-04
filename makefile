@@ -1,5 +1,5 @@
 run:
-	go run *.go
+	go run .
 build:
 	go build
 install:
