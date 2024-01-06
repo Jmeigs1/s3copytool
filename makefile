@@ -1,9 +1,15 @@
+GO_SOURCES = $(shell find . -type f -name '*.go')
+
+build: s3copytool
+
 run:
 	go run .
-build:
-	go build
+
 install:
 	go build && go install
+
+s3copytool: $(GO_SOURCES)
+	go build
 
 release: release_osx
 release_osx:
