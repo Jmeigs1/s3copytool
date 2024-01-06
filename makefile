@@ -6,7 +6,7 @@ run:
 	go run .
 
 install:
-	go build && go install
+	go install
 
 s3copytool: $(GO_SOURCES)
 	go build
