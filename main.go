@@ -10,12 +10,6 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-type ListObj struct {
-	Name   string
-	IsDir  bool
-	IsBack bool
-}
-
 type appState struct {
 	bucket   string
 	prefixes []string
@@ -52,7 +46,7 @@ func main() {
 
 		p, err := ParseS3Url(os.Args[1])
 		if err != nil {
-			fmt.Printf("Warning: Unable to parse starting key %s\n", os.Args[1])
+			panic(err)
 		}
 
 		state = appState{
@@ -135,9 +129,9 @@ func setObjectState(state *appState) error {
 		},
 		StartInSearchMode: true,
 		Templates: &promptui.SelectTemplates{
-			Inactive: " {{if .IsDir}} {{ .Name | bold }} {{- else}} {{ .Name }} {{- end}}",
-			Active:   fmt.Sprintf("%s  {{if .IsDir -}} {{ .Name | bold | underline }} {{- else -}} {{ .Name | underline }} {{- end}}", promptui.IconSelect),
-			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://%s/" | faint }}{{.Name | faint}}`, promptui.IconGood, state.bucket),
+			Inactive: " {{if .IsDir}} {{ .Name }}/ {{- else}} {{ .Name }} {{- end}}",
+			Active:   fmt.Sprintf("%s  {{if .IsDir -}} {{ .Name | underline }}/ {{- else -}} {{ .Name | underline }} {{- end}}", promptui.IconSelect),
+			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "s3://%s/" | faint }}{{.Value | faint}}`, promptui.IconGood, state.bucket),
 		},
 		Stdout: &bellSkipper{},
 	}
@@ -156,9 +150,9 @@ func setObjectState(state *appState) error {
 			state.bucket = ""
 		}
 	} else if obj.IsDir {
-		state.prefixes = append(state.prefixes, path.Base(obj.Name))
+		state.prefixes = append(state.prefixes, path.Base(obj.Value))
 	} else {
-		state.key = obj.Name
+		state.key = obj.Value
 	}
 
 	return nil

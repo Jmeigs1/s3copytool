@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -9,6 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
+
+type ListObj struct {
+	Name   string
+	Value  string
+	IsDir  bool
+	IsBack bool
+}
 
 func getBucketsListAWS() ([]string, error) {
 	AwsSession, err := session.NewSessionWithOptions(session.Options{
@@ -61,7 +69,8 @@ func getObjectsListAWS(bucketName string, prefix string) ([]ListObj, error) {
 
 	for _, o := range result.Contents {
 		resultObjects = append(resultObjects, ListObj{
-			Name:   *o.Key,
+			Name:   path.Base(*o.Key),
+			Value:  *o.Key,
 			IsDir:  false,
 			IsBack: false,
 		})
@@ -69,14 +78,16 @@ func getObjectsListAWS(bucketName string, prefix string) ([]ListObj, error) {
 
 	for _, o := range result.CommonPrefixes {
 		resultObjects = append(resultObjects, ListObj{
-			Name:   *o.Prefix,
+			Name:   path.Base(*o.Prefix),
+			Value:  *o.Prefix,
 			IsDir:  true,
 			IsBack: false,
 		})
 	}
 
 	back := ListObj{
-		Name:   prefix + "..",
+		Name:   "..",
+		Value:  "..",
 		IsDir:  false,
 		IsBack: true,
 	}

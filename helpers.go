@@ -62,12 +62,25 @@ func ParseS3Url(s3Url string) (*ParsedS3Url, error) {
 		return nil, err
 	}
 
-	// assume "directory" paths will end in /
-	splitPath := strings.Split(parsed.Path[1:], "/")
+	if parsed.Scheme != "s3" {
+		return nil, fmt.Errorf("Starting url is not a valid s3 path: %s", s3Url)
+	}
 
-	return &ParsedS3Url{
+	// Remove leading slash
+	path := parsed.Path[1:]
+
+	splitPath := strings.Split(path, "/")
+
+	retVal := &ParsedS3Url{
 		Bucket:   parsed.Host,
 		Prefixes: splitPath[:len(splitPath)-1],
-		Key:      splitPath[len(splitPath)-1],
-	}, nil
+		Key:      "",
+	}
+
+	// assume "directory" paths will end in / and last index will be ""
+	if splitPath[len(splitPath)-1] != "" {
+		retVal.Key = path
+	}
+
+	return retVal, nil
 }
